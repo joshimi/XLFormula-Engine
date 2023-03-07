@@ -379,10 +379,6 @@ fn calculate_boolean_operator_rhs_boolean(
                 types::Value::Boolean(types::Boolean::False)
             }
         }
-        types::Value::Error(_) => match l {
-            types::Boolean::True => types::Value::Boolean(types::Boolean::True),
-            types::Boolean::False => types::Value::Boolean(types::Boolean::False),
-        },
         types::Value::Iterator(mut value_vec) => {
             if let Some(mut temp) = value_vec.pop() {
                 while let Some(top) = value_vec.pop() {
@@ -469,7 +465,6 @@ fn calculate_boolean_operator(
         types::Value::Boolean(l) => {
             calculate_boolean_operator_rhs_boolean(l, cast_value_to_boolean(rhs), f)
         }
-        types::Value::Error(_) => calculate_boolean_operator_rhs_error(cast_value_to_boolean(rhs)),
         types::Value::Iterator(lhs_vec) => {
             calculate_boolean_operator_rhs_iterator(cast_value_to_boolean(rhs), lhs_vec, f)
         }
