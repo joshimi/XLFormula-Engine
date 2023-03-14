@@ -1501,3 +1501,18 @@ fn it_evaluates_if_formulas_with_text() {
         "100 - Test"
     );
 }
+
+#[test]
+fn test_inner_function_with_whitespace() {
+    let data_function = |s: String| match s.as_str() {
+        "any_dropdowns" => types::Value::Number(1.0),
+        "primary_carrier" => types::Value::Text("Allianz*".to_owned()),
+        _ => types::Value::Error(types::Error::Value),
+    };
+    assert_eq!(
+        evaluate_formula_boolean_with_reference(
+            &"=AND(RIGHT(primary_carrier, 1)=\"*\", 1 > 0)",
+            Some(&data_function)),
+        "TRUE"
+    );
+}
