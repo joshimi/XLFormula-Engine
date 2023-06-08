@@ -1148,7 +1148,7 @@ fn it_evaluates_blanks_in_comparison_operators() {
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=1>B", Some(&data_function)),
-        "TRUE",
+        "FALSE",
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=B>1", Some(&data_function)),
@@ -1156,11 +1156,23 @@ fn it_evaluates_blanks_in_comparison_operators() {
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=0=B", Some(&data_function)),
-        "TRUE",
+        "FALSE",
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=B=0", Some(&data_function)),
-        "TRUE",
+        "FALSE",
+    );
+    assert_eq!(
+        evaluate_formula_boolean_with_reference(&"=B=\"\"", Some(&data_function)),
+        "TRUE"
+    );
+    assert_eq!(
+        evaluate_formula_boolean_with_reference(&"=\"\"=B", Some(&data_function)),
+        "TRUE"
+    );
+    assert_eq!(
+        evaluate_formula_boolean_with_reference(&"=\"something\"=B", Some(&data_function)),
+        "FALSE"
     );
 }
 
@@ -1177,11 +1189,11 @@ fn it_evaluates_blanks_in_comparison_operators_with_references() {
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=B>=A", Some(&data_function)),
-        "TRUE",
+        "FALSE",
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=A<B", Some(&data_function)),
-        "TRUE",
+        "FALSE",
     );
     assert_eq!(
         evaluate_formula_string_with_reference(&"=B<A", Some(&data_function)),
