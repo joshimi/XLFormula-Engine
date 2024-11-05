@@ -42,7 +42,7 @@ pub fn parse_string_to_formula(
     s: &str,
     f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
 ) -> types::Formula {
-    match parse_string(&s) {
+    match parse_string(s) {
         Some(parse_result) => match parse_result.as_rule() {
             Rule::expr => build_formula_with_climber(parse_result.into_inner(), f),
             Rule::string_constant => parse_string_constant(parse_result),
@@ -235,19 +235,12 @@ fn build_formula_custom_function(
 ) -> types::Formula {
     let mut vec = Vec::new();
     for field in pair.clone().into_inner() {
-        match field.as_rule() {
-            Rule::expr =>
-            // vec.push(field.into_inner().as_str().parse::<f32>().unwrap()),
-            // if custom formula is undefined, then don't have anything to push into vec
-            {
-                let x = field.into_inner().as_str();
-                let y = x.parse::<f32>();
-                match y {
-                    Ok(_) => vec.push(y.unwrap()),
-                    Err(_) => (),
-                }
+        if field.as_rule() == Rule::expr {
+            let x = field.into_inner().as_str();
+            let y = x.parse::<f32>();
+            if let Ok(y) = y {
+                vec.push(y);
             }
-            _ => (),
         }
     }
     let mut ref_string = String::new();

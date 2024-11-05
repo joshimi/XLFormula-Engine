@@ -32,11 +32,11 @@ fn calculate_string_operation_rhs(
     match rhs {
         types::Value::Boolean(_) => rhs,
         types::Value::Error(_) => rhs,
-        types::Value::Number(r) => types::Value::Text(f(&l, &r.to_string())),
-        types::Value::Text(r) => types::Value::Text(f(&l, &r)),
+        types::Value::Number(r) => types::Value::Text(f(l, &r.to_string())),
+        types::Value::Text(r) => types::Value::Text(f(l, &r)),
         types::Value::Iterator(_) => types::Value::Error(types::Error::Value),
         types::Value::Date(_) => types::Value::Error(types::Error::Value),
-        types::Value::Blank => types::Value::Text(f(&l, "")),
+        types::Value::Blank => types::Value::Text(f(l, "")),
     }
 }
 
@@ -238,10 +238,9 @@ fn calculate_average_operator_rhs_number(
         types::Value::Number(r) => types::Value::Number(f(l, r)),
         types::Value::Iterator(mut value_vec) => {
             if let Some(mut temp) = value_vec.pop() {
-                match temp {
-                    types::Value::Blank => *element_count -= 1,
-                    _ => (),
-                };
+                if temp == types::Value::Blank {
+                    *element_count -= 1;
+                }
                 while let Some(top) = value_vec.pop() {
                     temp = calculate_numeric_operator(temp, top.clone(), f);
                     match top {
