@@ -1560,3 +1560,18 @@ fn test_inner_function_with_whitespace() {
         "TRUE"
     );
 }
+
+#[test]
+fn test_zero_padding() {
+    let data_function = |s: String| match s.as_str() {
+        "num" => types::Value::Number(91.0),
+        _ => types::Value::Error(types::Error::Value),
+    };
+    assert_eq!(
+        evaluate_formula_boolean_with_reference(
+            &"=RIGHT(\"00000000\" & num, 8)",
+            Some(&data_function)
+        ),
+        "00000091"
+    );
+}
