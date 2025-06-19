@@ -1,7 +1,9 @@
 # XLFormula Engine
+
 XLFormula Engine is a Rust crate for parsing and evaluating Excel formulas. It currently works with f32 types.
 
 ## Features
+
 It supports:
 
 * Any numbers, negative and positive, as float or integer
@@ -14,17 +16,20 @@ It supports:
 * Operations on lists of values (one dimensional range)
 * Add or subtract dates and excel funtion DAYS()
 * Custom functions with number arguments
-* Handle blank/null values in calculation 
+* Handle blank/null values in calculation
 * Handle empty/missing parameters of function calls as blank values
 
 ## Installation
 
 Add the corresponding entry to your Cargo.toml dependency list:
+
 ```toml
 [dependencies]
 xlformula_engine = "0.1.18"
 ```
+
 and add this to your crate root:
+
 ```rust
 extern crate xlformula_engine;
 ```
@@ -32,6 +37,7 @@ extern crate xlformula_engine;
 ## Examples
 
 Here are simple examples of parsing an Excel formula string and evaluating to a result:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -53,9 +59,11 @@ let result = calculate::calculate_formula(formula, None::<NoReference>);
 println!("Result is {}", calculate::result_to_string(result));
 }
 ```
+
 The last string is evaluated to #DIV/0!.
 
 Concatenating strings:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -73,9 +81,11 @@ let result = calculate::calculate_formula(formula, None::<NoReference>);
 println!("Result is {}", calculate::result_to_string(result));
 }
 ```
+
 Concatenating number and string results in a #CAST! error.
 
 Constants ( i.e. a string without '=' ):
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -95,6 +105,7 @@ println!("Result is {}", calculate::result_to_string(result));
 ```
 
 Excel functions:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -134,6 +145,7 @@ println!("Result is {}", calculate::result_to_string(result));
 ```
 
 Logical expressions:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -157,6 +169,7 @@ println!("Result is {}", calculate::result_to_string(result));
 ```
 
 References:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -178,6 +191,7 @@ println!("Result is {}", calculate::result_to_string(result));
 ```
 
 List:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -201,6 +215,7 @@ println!("Result is {}", calculate::result_to_string(result));
 ```
 
 Date:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -237,6 +252,7 @@ Ok(())
 ```
 
 Custom Function:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -270,6 +286,7 @@ println!("Result is {}", calculate::result_to_string(result));
 ```
 
 Handle blank in calculation:
+
 ```rust
 extern crate xlformula_engine;
 use xlformula_engine::calculate;
@@ -314,9 +331,10 @@ fn main() -> {
 }
 ```
 
-
 ## License
-Licensed under MIT License (see the [LICENSE](https://github.com/jiradaherbst/XLFormula-Engine/blob/master/LICENSE) file for the full text). 
+
+Licensed under MIT License (see the [LICENSE](https://github.com/jiradaherbst/XLFormula-Engine/blob/master/LICENSE) file for the full text).
 
 ## Contact
+
 Please feel free to contact us at jirada.herbst@data2impact.com.
