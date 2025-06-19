@@ -1098,7 +1098,7 @@ fn calculate_operation(
         types::Operator::Divide => {
             let (value2, value1) = get_values(exp, f);
             match value2 {
-                types::Value::Number(x) if x == 0.0 => types::Value::Error(types::Error::Div0),
+                types::Value::Number(0.0) => types::Value::Error(types::Error::Div0),
                 _ => calculate_numeric_operator(value1, value2, calculate_divide_operator),
             }
         }
