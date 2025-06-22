@@ -1,6 +1,8 @@
 # XLFormula Engine
 
-XLFormula Engine is a Rust crate for parsing and evaluating Excel formulas. It currently works with f32 types.
+XLFormula Engine is a Rust crate for parsing and evaluating Excel formulas.
+
+It works with f32 by default (the `f32` feature) or with `f64` by enabling the `f64` feature and disabling default features.
 
 ## Features
 
@@ -25,13 +27,14 @@ Add the corresponding entry to your Cargo.toml dependency list:
 
 ```toml
 [dependencies]
-xlformula_engine = "0.1.18"
+xlformula_engine = "0.1.19"
 ```
 
-and add this to your crate root:
+Or use the following for using `f64`:
 
-```rust
-extern crate xlformula_engine;
+```toml
+[dependencies]
+xlformula_engine = { version = "0.1.19", default-features = false, features = ["f64"] }
 ```
 
 ## Examples
@@ -258,10 +261,11 @@ extern crate xlformula_engine;
 use xlformula_engine::calculate;
 use xlformula_engine::parse_formula;
 use xlformula_engine::types;
+use xlformula_engine::types::XlNum;
 use xlformula_engine::NoReference;
 
 fn main() {
-let custom_functions = |s: String, params: Vec<f32>| match s.as_str() {
+let custom_functions = |s: String, params: Vec<XlNum>| match s.as_str() {
 "Increase" => types::Value::Number(params[0] + 1.0),
 "SimpleSum" => types::Value::Number(params[0] + params[1]),
 "EqualFive" => types::Value::Number(5.0),
@@ -303,7 +307,7 @@ fn main() -> {
         _ => types::Value::Error(types::Error::Value),
     };
 
-    let custom_functions = |s: String, params: Vec<f32>| match s.as_str() {
+    let custom_functions = |s: String, params: Vec<XlNum>| match s.as_str() {
         "BLANK" => types::Value::Blank,
         _ => types::Value::Error(types::Error::Value),
     };

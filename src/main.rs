@@ -1,11 +1,9 @@
-extern crate xlformula_engine;
-use chrono::format::ParseError;
-use chrono::{DateTime, FixedOffset};
-use xlformula_engine::calculate;
-use xlformula_engine::parse_formula;
-use xlformula_engine::types;
-use xlformula_engine::NoCustomFunction;
-use xlformula_engine::NoReference;
+use chrono::{format::ParseError, DateTime, FixedOffset};
+use xlformula_engine::{
+    calculate, parse_formula,
+    types::{self, XlNum},
+    NoCustomFunction, NoReference,
+};
 
 fn main() -> Result<(), ParseError> {
     let formula = parse_formula::parse_string_to_formula("=1+2", None::<NoCustomFunction>);
@@ -135,7 +133,7 @@ fn main() -> Result<(), ParseError> {
     let result = calculate::calculate_formula(formula, Some(&data_function));
     println!("Result is {}", calculate::result_to_string(result));
 
-    let custom_functions = |s: String, params: Vec<f32>| match s.as_str() {
+    let custom_functions = |s: String, params: Vec<XlNum>| match s.as_str() {
         "Increase" => types::Value::Number(params[0] + 1.0),
         "SimpleSum" => types::Value::Number(params[0] + params[1]),
         "EqualFive" => types::Value::Number(5.0),
@@ -155,7 +153,7 @@ fn main() -> Result<(), ParseError> {
     let result = calculate::calculate_formula(formula, None::<NoReference>);
     println!("Result is {}", calculate::result_to_string(result));
 
-    let custom_function = |s: String, _params: Vec<f32>| match s.as_str() {
+    let custom_function = |s: String, _params: Vec<XlNum>| match s.as_str() {
         "EqualFive" => types::Value::Number(5.0),
         _ => types::Value::Error(types::Error::Value),
     };
@@ -198,7 +196,7 @@ fn main() -> Result<(), ParseError> {
         _ => types::Value::Error(types::Error::Value),
     };
 
-    let custom_functions = |s: String, params: Vec<f32>| match s.as_str() {
+    let custom_functions = |s: String, params: Vec<XlNum>| match s.as_str() {
         "Increase" => types::Value::Number(params[0] + 1.0),
         "BLANK" => types::Value::Blank,
         _ => types::Value::Error(types::Error::Value),

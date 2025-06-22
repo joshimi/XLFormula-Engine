@@ -1,14 +1,12 @@
-extern crate pest;
-use pest::Parser;
+use crate::types::{self, XlNum};
+use pest::{
+    prec_climber::{Assoc, Operator, PrecClimber},
+    Parser,
+};
+
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
 pub struct GrammarParser;
-
-use crate::types;
-
-use pest::prec_climber::Assoc;
-use pest::prec_climber::Operator;
-use pest::prec_climber::PrecClimber;
 
 /// Use this function to catch a parse error.
 fn parse_string(s: &str) -> Option<pest::iterators::Pair<Rule>> {
@@ -40,7 +38,7 @@ fn parse_string_constant(parse_result: pest::iterators::Pair<Rule>) -> types::Fo
 /// Parses a string and stores it in Formula Enum.
 pub fn parse_string_to_formula(
     s: &str,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     match parse_string(s) {
         Some(parse_result) => match parse_result.as_rule() {
@@ -53,7 +51,7 @@ pub fn parse_string_to_formula(
 }
 
 fn build_formula_number(pair: pest::iterators::Pair<Rule>) -> types::Formula {
-    let x = pair.as_str().parse::<f32>().unwrap();
+    let x = pair.as_str().parse::<XlNum>().unwrap();
     let value = types::Value::Number(x);
     types::Formula::Value(value)
 }
@@ -81,7 +79,7 @@ fn build_formula_boolean(boolean_value: bool) -> types::Formula {
 fn build_formula_unary_operator(
     unary_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let op_type = match unary_operation {
         Rule::abs => types::Operator::Function(types::Function::Abs),
@@ -103,7 +101,7 @@ fn build_formula_reference(pair: pest::iterators::Pair<Rule>) -> types::Formula 
 
 fn build_formula_iterator(
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let mut vec = Vec::new();
     for term in pair.into_inner() {
@@ -115,7 +113,7 @@ fn build_formula_iterator(
 fn build_formula_collective_operator(
     collective_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let mut vec = Vec::new();
     for term in pair.into_inner() {
@@ -157,7 +155,7 @@ fn rule_to_function_operator(collective_operation: Rule) -> types::Operator {
 fn build_formula_collective_operator_average(
     collective_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let mut vec = Vec::new();
     for term in pair.into_inner() {
@@ -182,7 +180,7 @@ fn build_formula_collective_operator_average(
 fn build_formula_collective_operator_and(
     collective_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let mut vec = Vec::new();
     for term in pair.into_inner() {
@@ -208,7 +206,7 @@ fn build_formula_collective_operator_and(
 
 fn build_formula_iff(
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let mut vec = Vec::new();
     for term in pair.into_inner() {
@@ -231,13 +229,13 @@ fn build_formula_iff(
 
 fn build_formula_custom_function(
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let mut vec = Vec::new();
     for field in pair.clone().into_inner() {
         if field.as_rule() == Rule::expr {
             let x = field.into_inner().as_str();
-            let y = x.parse::<f32>();
+            let y = x.parse::<XlNum>();
             if let Ok(y) = y {
                 vec.push(y);
             }
@@ -297,7 +295,7 @@ fn build_formula_binary_operator(
 /// Builds Formula Enum using a `pest-PrecClimber`.
 fn build_formula_with_climber(
     expression: pest::iterators::Pairs<Rule>,
-    f: Option<&impl Fn(String, Vec<f32>) -> types::Value>,
+    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
     let climber = PrecClimber::new(vec![
         Operator::new(Rule::concat, Assoc::Left),

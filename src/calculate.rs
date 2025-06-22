@@ -1,18 +1,21 @@
-use crate::parse_formula;
-use crate::types;
+use crate::{
+    parse_formula,
+    types::{self, XlNum},
+};
 use chrono::{DateTime, Duration, FixedOffset};
-type NoCustomFunction<'a> = &'a fn(String, Vec<f32>) -> types::Value;
 
-fn calculate_divide_operator(num1: f32, num2: f32) -> f32 {
+type NoCustomFunction<'a> = &'a fn(String, Vec<XlNum>) -> types::Value;
+
+fn calculate_divide_operator(num1: XlNum, num2: XlNum) -> XlNum {
     num1 / num2
 }
 
-fn is_float_int(num: f32) -> bool {
-    //((num as i32) as f32) == num
-    (((num as i32) as f32) - num).abs() == 0.0
+fn is_float_int(num: XlNum) -> bool {
+    //((num as i32) as XlNum) == num
+    (((num as i32) as XlNum) - num).abs() == 0.0
 }
 
-fn calculate_power_operator(num1: f32, num2: f32) -> f32 {
+fn calculate_power_operator(num1: XlNum, num2: XlNum) -> XlNum {
     if is_float_int(num2) {
         num1.powi(num2 as i32)
     } else {
@@ -59,13 +62,13 @@ fn calculate_string_operator(
 fn calcualte_numeric_operator_rhs_text(
     t: String,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
-    match t.parse::<f32>() {
+    match t.parse::<XlNum>() {
         Ok(nl) => match rhs {
             types::Value::Boolean(_) => rhs,
             types::Value::Error(_) => rhs,
-            types::Value::Text(t) => match t.parse::<f32>() {
+            types::Value::Text(t) => match t.parse::<XlNum>() {
                 Ok(nr) => types::Value::Number(f(nl, nr)),
                 Err(_) => types::Value::Error(types::Error::Cast),
             },
@@ -79,15 +82,15 @@ fn calcualte_numeric_operator_rhs_text(
 }
 
 fn calculate_numeric_operator_rhs_number(
-    l: f32,
+    l: XlNum,
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     match rhs {
         types::Value::Boolean(_) => rhs,
         types::Value::Error(_) => rhs,
-        types::Value::Text(t) => match t.parse::<f32>() {
+        types::Value::Text(t) => match t.parse::<XlNum>() {
             Ok(nr) => types::Value::Number(f(l, nr)),
             Err(_) => types::Value::Error(types::Error::Cast),
         },
@@ -108,15 +111,15 @@ fn calculate_numeric_operator_rhs_number(
 }
 
 fn calculate_numeric_operator_product_rhs_number(
-    l: f32,
+    l: XlNum,
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     match rhs {
         types::Value::Boolean(_) => rhs,
         types::Value::Error(_) => rhs,
-        types::Value::Text(t) => match t.parse::<f32>() {
+        types::Value::Text(t) => match t.parse::<XlNum>() {
             Ok(nr) => types::Value::Number(f(l, nr)),
             Err(_) => types::Value::Error(types::Error::Cast),
         },
@@ -142,7 +145,7 @@ fn calculate_numeric_operator_product_rhs_number(
 fn calculate_numeric_operator_rhs_iterator(
     mut lhs_vec: Vec<types::Value>,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     match rhs {
         types::Value::Number(_) => {
@@ -190,7 +193,7 @@ fn subtract_days_from_date(d: DateTime<FixedOffset>, rhs: types::Value) -> types
 fn calculate_numeric_operator(
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     //println!("{:?}::{:?}", lhs, rhs);
     match lhs {
@@ -207,7 +210,7 @@ fn calculate_numeric_operator(
 fn calculate_numeric_product_operator(
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     //println!("{:?}::{:?}", lhs, rhs);
     match lhs {
@@ -223,15 +226,15 @@ fn calculate_numeric_product_operator(
 
 fn calculate_average_operator_rhs_number(
     element_count: &mut i32,
-    l: f32,
+    l: XlNum,
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     match rhs {
         types::Value::Boolean(_) => rhs,
         types::Value::Error(_) => rhs,
-        types::Value::Text(t) => match t.parse::<f32>() {
+        types::Value::Text(t) => match t.parse::<XlNum>() {
             Ok(nr) => types::Value::Number(f(l, nr)),
             Err(_) => types::Value::Error(types::Error::Cast),
         },
@@ -265,7 +268,7 @@ fn calculate_average_operator_rhs_iterator(
     element_count: &mut i32,
     mut lhs_vec: Vec<types::Value>,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     match rhs {
         types::Value::Number(_) => {
@@ -287,7 +290,7 @@ fn calculate_average_operator(
     element_count: &mut i32,
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> f32,
+    f: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     match lhs {
         types::Value::Boolean(_) => lhs,
@@ -310,7 +313,7 @@ fn calculate_average_operator(
 fn calculate_comparison_operator(
     lhs: types::Value,
     rhs: types::Value,
-    f: fn(num1: f32, num2: f32) -> bool,
+    f: fn(num1: XlNum, num2: XlNum) -> bool,
 ) -> types::Value {
     match lhs {
         types::Value::Text(l) => match rhs {
@@ -891,7 +894,7 @@ fn calculate_collective_operator(
     mut collective_value: types::Value,
     mut exp: types::Expression,
     f: Option<&impl Fn(String) -> types::Value>,
-    f_collective: fn(num1: f32, num2: f32) -> f32,
+    f_collective: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     while let Some(top) = exp.values.pop() {
         collective_value =
@@ -904,7 +907,7 @@ fn calculate_collective_product_operator(
     mut collective_value: types::Value,
     mut exp: types::Expression,
     f: Option<&impl Fn(String) -> types::Value>,
-    f_collective: fn(num1: f32, num2: f32) -> f32,
+    f_collective: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     while let Some(top) = exp.values.pop() {
         collective_value = calculate_numeric_product_operator(
@@ -923,7 +926,7 @@ fn calculate_average(
     mut collective_value: types::Value,
     mut exp: types::Expression,
     f: Option<&impl Fn(String) -> types::Value>,
-    f_collective: fn(num1: f32, num2: f32) -> f32,
+    f_collective: fn(num1: XlNum, num2: XlNum) -> XlNum,
 ) -> types::Value {
     let mut element_count = 0;
     while let Some(top) = exp.values.pop() {
@@ -940,7 +943,7 @@ fn calculate_average(
     } else {
         calculate_numeric_operator(
             collective_value,
-            types::Value::Number(element_count as f32),
+            types::Value::Number(element_count as XlNum),
             calculate_divide_operator,
         )
     }
@@ -954,13 +957,13 @@ fn calculate_days(date_pair: (types::Value, types::Value)) -> types::Value {
     let (start, end) = date_pair;
     match (start, end) {
         (types::Value::Date(start), types::Value::Date(end)) => {
-            types::Value::Number((end - start).num_days() as f32)
+            types::Value::Number((end - start).num_days() as XlNum)
         }
         (types::Value::Blank, types::Value::Date(end)) => {
-            types::Value::Number((end - begin_of_date).num_days() as f32)
+            types::Value::Number((end - begin_of_date).num_days() as XlNum)
         }
         (types::Value::Date(start), types::Value::Blank) => {
-            types::Value::Number((begin_of_date - start).num_days() as f32)
+            types::Value::Number((begin_of_date - start).num_days() as XlNum)
         }
         (types::Value::Blank, types::Value::Blank) => types::Value::Number(0.0),
         _ => types::Value::Error(types::Error::Value),
@@ -1225,7 +1228,7 @@ pub fn result_to_string(_value: types::Value) -> String {
     }
 }
 
-fn show_number(number: f32) -> String {
+fn show_number(number: XlNum) -> String {
     if number.is_infinite() {
         String::from("#DIV/0!")
     } else {
