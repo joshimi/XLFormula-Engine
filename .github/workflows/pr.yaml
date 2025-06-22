@@ -1,0 +1,65 @@
+name: 🔃 Pull Request
+
+on:
+  pull_request:
+
+jobs:
+  test:
+    name: 🧪 Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        features:
+          - default
+          - f32
+          - f64
+        phase:
+          - debug
+          - release
+    steps:
+      - name: 🛎 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Install Cargo
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: 🚩 Cargo flags
+        id: cargo_flags
+        run: |
+          flags=""
+
+          if [ "${{ matrix.features}}" != "default" ]
+          then
+            flags="${flags} --no-default-features --features=${{ matrix.features }}"
+          fi
+
+          if [ "${{ matrix.phase }}" = "release" ]
+          then
+            flags="${flags} --release"
+          fi
+
+          echo "flags=${flags}" >> "${GITHUB_OUTPUT}"
+
+      - name: 📦 Cargo clippy
+        run: |
+          cargo clippy ${{ steps.cargo_flags.outputs.flags }} -- -D warnings
+
+      - name: 📦 Cargo test
+        run: |
+          cargo test ${{ steps.cargo_flags.outputs.flags }}
+
+      - name: 📦 Cargo run
+        run: |
+          cargo run ${{ steps.cargo_flags.outputs.flags }}
+
+      - name: 🥱 Ensure no changes
+        run: |
+          if [ ! -z "$(git status --porcelain)" ]
+          then
+            echo "Files have changed while testing:"
+            echo
+            git status
+            exit 1
+          fi
