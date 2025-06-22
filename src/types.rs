@@ -54,13 +54,18 @@ pub enum Boolean {
     False,
 }
 
+#[cfg(feature = "f32")]
+pub type XlNum = f32;
+#[cfg(feature = "f64")]
+pub type XlNum = f64;
+
 /// The result of an evaluation.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
-    Number(f32),
+    Number(XlNum),
     Text(String),
     Boolean(Boolean),
-    Iterator(Vec<Value>),
+    Iterator(Vec<Self>),
     Error(Error),
     Date(DateTime<FixedOffset>),
     Blank,
@@ -72,7 +77,7 @@ pub enum Formula {
     Operation(Expression),
     Value(Value),
     Reference(String),
-    Iterator(Vec<Formula>),
+    Iterator(Vec<Self>),
 }
 
 /// Struct that holds a parsed string. Formula enum and Expression Struct are defined recursively.
