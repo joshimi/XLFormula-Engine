@@ -1,7 +1,7 @@
 //!# XLFormula Engine
 //!XLFormula Engine is a Rust crate for parsing and evaluating Excel formulas.
 //!
-//!It works with f32 by default (the `f32` feature) or with `f64` by enabling the `f64` feature and disabling default features.
+//!It works with f64 by default (the `f64` feature) or with `f32` by enabling the `f32` feature and disabling default features.
 //!
 //!## Features
 //!It supports:
@@ -24,11 +24,7 @@
 //!Add the corresponding entry to your Cargo.toml dependency list:
 //!```toml
 //![dependencies]
-//!xlformula_engine = "0.1.18"
-//!```
-//!and add this to your crate root:
-//!```rust
-//!extern crate xlformula_engine;
+//!xlformula_engine = "0.3.0"
 //!```
 //!
 //!## Examples

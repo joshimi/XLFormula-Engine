@@ -2,7 +2,7 @@
 
 XLFormula Engine is a Rust crate for parsing and evaluating Excel formulas.
 
-It works with f32 by default (the `f32` feature) or with `f64` by enabling the `f64` feature and disabling default features.
+It works with f64 by default (the `f64` feature) or with `f32` by enabling the `f32` feature and disabling default features.
 
 ## Features
 
@@ -27,14 +27,14 @@ Add the corresponding entry to your Cargo.toml dependency list:
 
 ```toml
 [dependencies]
-xlformula_engine = "0.1.19"
+xlformula_engine = "0.3.0"
 ```
 
-Or use the following for using `f64`:
+Or use the following for using `f32`:
 
 ```toml
 [dependencies]
-xlformula_engine = { version = "0.1.19", default-features = false, features = ["f64"] }
+xlformula_engine = { version = "0.3.0", default-features = false, features = ["f32"] }
 ```
 
 ## Examples

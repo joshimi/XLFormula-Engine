@@ -1,6 +1,6 @@
 use crate::types::{self, XlNum};
 use pest::{
-    prec_climber::{Assoc, Operator, PrecClimber},
+    pratt_parser::{Assoc, Op, PrattParser},
     Parser,
 };
 
@@ -42,7 +42,7 @@ pub fn parse_string_to_formula(
 ) -> types::Formula {
     match parse_string(s) {
         Some(parse_result) => match parse_result.as_rule() {
-            Rule::expr => build_formula_with_climber(parse_result.into_inner(), f),
+            Rule::expr => build_formula_with_parser(parse_result.into_inner(), f),
             Rule::string_constant => parse_string_constant(parse_result),
             _ => types::Formula::Value(types::Value::Error(types::Error::Parse)),
         },
@@ -89,7 +89,7 @@ fn build_formula_unary_operator(
     };
     let operation = types::Expression {
         op: op_type,
-        values: vec![build_formula_with_climber(pair.into_inner(), f)],
+        values: vec![build_formula_with_parser(pair.into_inner(), f)],
     };
     types::Formula::Operation(operation)
 }
@@ -105,7 +105,7 @@ fn build_formula_iterator(
 ) -> types::Formula {
     let mut vec = Vec::new();
     for term in pair.into_inner() {
-        vec.push(build_formula_with_climber(term.into_inner(), f));
+        vec.push(build_formula_with_parser(term.into_inner(), f));
     }
     types::Formula::Iterator(vec)
 }
@@ -124,7 +124,7 @@ fn build_formula_collective_operator(
         {
             vec.push(types::Formula::Value(types::Value::Blank))
         } else {
-            vec.push(build_formula_with_climber(term.into_inner(), f))
+            vec.push(build_formula_with_parser(term.into_inner(), f))
         }
     }
     let op_type = rule_to_function_operator(collective_operation);
@@ -166,7 +166,7 @@ fn build_formula_collective_operator_average(
         {
             vec.push(types::Formula::Value(types::Value::Number(0.0)))
         } else {
-            vec.push(build_formula_with_climber(term.into_inner(), f))
+            vec.push(build_formula_with_parser(term.into_inner(), f))
         }
     }
     let op_type = rule_to_function_operator(collective_operation);
@@ -193,7 +193,7 @@ fn build_formula_collective_operator_and(
                 types::Boolean::False,
             )))
         } else {
-            vec.push(build_formula_with_climber(term.into_inner(), f))
+            vec.push(build_formula_with_parser(term.into_inner(), f))
         }
     }
     let op_type = rule_to_function_operator(collective_operation);
@@ -217,7 +217,7 @@ fn build_formula_iff(
         {
             vec.push(types::Formula::Value(types::Value::Blank))
         } else {
-            vec.push(build_formula_with_climber(term.into_inner(), f))
+            vec.push(build_formula_with_parser(term.into_inner(), f))
         }
     }
     let operation = types::Expression {
@@ -292,25 +292,22 @@ fn build_formula_binary_operator(
     types::Formula::Operation(operation)
 }
 
-/// Builds Formula Enum using a `pest-PrecClimber`.
-fn build_formula_with_climber(
+fn build_formula_with_parser(
     expression: pest::iterators::Pairs<Rule>,
     f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
 ) -> types::Formula {
-    let climber = PrecClimber::new(vec![
-        Operator::new(Rule::concat, Assoc::Left),
-        Operator::new(Rule::equal, Assoc::Left) | Operator::new(Rule::not_equal, Assoc::Left),
-        Operator::new(Rule::greater, Assoc::Left)
-            | Operator::new(Rule::less, Assoc::Left)
-            | Operator::new(Rule::greater_or_equal, Assoc::Left)
-            | Operator::new(Rule::less_or_equal, Assoc::Left),
-        Operator::new(Rule::add, Assoc::Left) | Operator::new(Rule::subtract, Assoc::Left),
-        Operator::new(Rule::multiply, Assoc::Left) | Operator::new(Rule::divide, Assoc::Left),
-        Operator::new(Rule::power, Assoc::Right),
-    ]);
-    climber.climb(
-        expression,
-        |pair: pest::iterators::Pair<Rule>| match pair.as_rule() {
+    let pratt = PrattParser::new()
+        .op(Op::infix(Rule::concat, Assoc::Left))
+        .op(Op::infix(Rule::equal, Assoc::Left) | Op::infix(Rule::not_equal, Assoc::Left))
+        .op(Op::infix(Rule::greater, Assoc::Left)
+            | Op::infix(Rule::less, Assoc::Left)
+            | Op::infix(Rule::greater_or_equal, Assoc::Left)
+            | Op::infix(Rule::less_or_equal, Assoc::Left))
+        .op(Op::infix(Rule::add, Assoc::Left) | Op::infix(Rule::subtract, Assoc::Left))
+        .op(Op::infix(Rule::multiply, Assoc::Left) | Op::infix(Rule::divide, Assoc::Left))
+        .op(Op::infix(Rule::power, Assoc::Right));
+    pratt
+        .map_primary(|pair: pest::iterators::Pair<Rule>| match pair.as_rule() {
             Rule::number => build_formula_number(pair),
             Rule::string_double_quote => build_formula_string_double_quote(pair),
             Rule::string_single_quote => build_formula_string_single_quote(pair),
@@ -327,7 +324,7 @@ fn build_formula_with_climber(
             Rule::reference => build_formula_reference(pair),
             Rule::iterator => build_formula_iterator(pair, f),
             Rule::negate => build_formula_unary_operator(Rule::negate, pair, f),
-            Rule::expr => build_formula_with_climber(pair.into_inner(), f),
+            Rule::expr => build_formula_with_parser(pair.into_inner(), f),
             Rule::days => build_formula_collective_operator(Rule::days, pair, f),
             Rule::right => build_formula_collective_operator(Rule::right, pair, f),
             Rule::left => build_formula_collective_operator(Rule::left, pair, f),
@@ -335,25 +332,27 @@ fn build_formula_with_climber(
             Rule::iff => build_formula_iff(pair, f),
             Rule::isblank => build_formula_collective_operator(Rule::isblank, pair, f),
             _ => unreachable!(),
-        },
-        |lhs: types::Formula, op: pest::iterators::Pair<Rule>, rhs: types::Formula| match op
-            .as_rule()
-        {
-            Rule::add => build_formula_binary_operator(Rule::add, lhs, rhs),
-            Rule::subtract => build_formula_binary_operator(Rule::subtract, lhs, rhs),
-            Rule::multiply => build_formula_binary_operator(Rule::multiply, lhs, rhs),
-            Rule::divide => build_formula_binary_operator(Rule::divide, lhs, rhs),
-            Rule::power => build_formula_binary_operator(Rule::power, lhs, rhs),
-            Rule::concat => build_formula_binary_operator(Rule::concat, lhs, rhs),
-            Rule::equal => build_formula_binary_operator(Rule::equal, lhs, rhs),
-            Rule::not_equal => build_formula_binary_operator(Rule::not_equal, lhs, rhs),
-            Rule::greater => build_formula_binary_operator(Rule::greater, lhs, rhs),
-            Rule::less => build_formula_binary_operator(Rule::less, lhs, rhs),
-            Rule::greater_or_equal => {
-                build_formula_binary_operator(Rule::greater_or_equal, lhs, rhs)
-            }
-            Rule::less_or_equal => build_formula_binary_operator(Rule::less_or_equal, lhs, rhs),
-            _ => unreachable!(),
-        },
-    )
+        })
+        .map_infix(
+            |lhs: types::Formula, op: pest::iterators::Pair<Rule>, rhs: types::Formula| match op
+                .as_rule()
+            {
+                Rule::add => build_formula_binary_operator(Rule::add, lhs, rhs),
+                Rule::subtract => build_formula_binary_operator(Rule::subtract, lhs, rhs),
+                Rule::multiply => build_formula_binary_operator(Rule::multiply, lhs, rhs),
+                Rule::divide => build_formula_binary_operator(Rule::divide, lhs, rhs),
+                Rule::power => build_formula_binary_operator(Rule::power, lhs, rhs),
+                Rule::concat => build_formula_binary_operator(Rule::concat, lhs, rhs),
+                Rule::equal => build_formula_binary_operator(Rule::equal, lhs, rhs),
+                Rule::not_equal => build_formula_binary_operator(Rule::not_equal, lhs, rhs),
+                Rule::greater => build_formula_binary_operator(Rule::greater, lhs, rhs),
+                Rule::less => build_formula_binary_operator(Rule::less, lhs, rhs),
+                Rule::greater_or_equal => {
+                    build_formula_binary_operator(Rule::greater_or_equal, lhs, rhs)
+                }
+                Rule::less_or_equal => build_formula_binary_operator(Rule::less_or_equal, lhs, rhs),
+                _ => unreachable!(),
+            },
+        )
+        .parse(expression)
 }
