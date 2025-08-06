@@ -779,6 +779,9 @@ fn it_evaluate_left_and_right_functions() {
     assert_eq!(evaluate_formula_string("=LEFT(\"apple\")"), "a",);
 
     assert_eq!(evaluate_formula_string("=\"P\"&LEFT(\"000\"&1,3)"), "P000",);
+
+    assert_eq!(evaluate_formula_string("=LEFT(\"apple\", 10)"), "apple",);
+    assert_eq!(evaluate_formula_string("=RIGHT(\"apple\", 10)"), "apple",);
 }
 
 #[test]

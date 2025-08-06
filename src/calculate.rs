@@ -980,7 +980,9 @@ fn calculate_right(number_string: (types::Value, types::Value)) -> types::Value 
     let trimmed_string = match string {
         types::Value::Text(s) => {
             let temp: &'static str = Box::leak(s.into_boxed_str());
-            &temp[(temp.len() - trim_length)..]
+            let len = temp.len();
+            let start = if trim_length > len { len } else { trim_length };
+            &temp[(len - start)..]
         }
         _ => "",
     };
@@ -997,7 +999,9 @@ fn calculate_left(number_string: (types::Value, types::Value)) -> types::Value {
     let trimmed_string = match string {
         types::Value::Text(s) => {
             let temp: &'static str = Box::leak(s.into_boxed_str());
-            &temp[..trim_length]
+            let len = temp.len();
+            let end = if trim_length > len { len } else { trim_length };
+            &temp[..end]
         }
         _ => "",
     };
