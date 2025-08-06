@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 name = "xlformula_engine"
 readme = "README.md"
 repository = "https://github.com/jiradaherbst/XLFormula-Engine"
-version = "0.3.0"
+version = "0.3.1"
 
 [features]
 default = ["f64"]
