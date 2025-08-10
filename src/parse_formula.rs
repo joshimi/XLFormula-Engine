@@ -3,13 +3,15 @@ use pest::{
     pratt_parser::{Assoc, Op, PrattParser},
     Parser,
 };
+use pest_derive::Parser;
+use std::{fmt::Debug, str::FromStr};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
 pub struct GrammarParser;
 
 /// Use this function to catch a parse error.
-fn parse_string(s: &str) -> Option<pest::iterators::Pair<Rule>> {
+fn parse_string(s: &'_ str) -> Option<pest::iterators::Pair<'_, Rule>> {
     let parse_result = GrammarParser::parse(Rule::formula, s);
     //println!("{:#?}", parse_result);
     match parse_result {
@@ -24,7 +26,11 @@ fn parse_string(s: &str) -> Option<pest::iterators::Pair<Rule>> {
     //     .next()
 }
 
-fn parse_string_constant(parse_result: pest::iterators::Pair<Rule>) -> types::Formula {
+fn parse_string_constant<N>(parse_result: pest::iterators::Pair<Rule>) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let string = parse_result
         .into_inner()
         .as_str()
@@ -36,10 +42,14 @@ fn parse_string_constant(parse_result: pest::iterators::Pair<Rule>) -> types::Fo
 }
 
 /// Parses a string and stores it in Formula Enum.
-pub fn parse_string_to_formula(
+pub fn parse_string_to_formula<N>(
     s: &str,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     match parse_string(s) {
         Some(parse_result) => match parse_result.as_rule() {
             Rule::expr => build_formula_with_parser(parse_result.into_inner(), f),
@@ -50,25 +60,42 @@ pub fn parse_string_to_formula(
     }
 }
 
-fn build_formula_number(pair: pest::iterators::Pair<Rule>) -> types::Formula {
-    let x = pair.as_str().parse::<XlNum>().unwrap();
+fn build_formula_number<N>(pair: pest::iterators::Pair<Rule>) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
+    let s = pair.as_str();
+    let x = s.parse::<N>().unwrap();
     let value = types::Value::Number(x);
     types::Formula::Value(value)
 }
 
-fn build_formula_string_double_quote(pair: pest::iterators::Pair<Rule>) -> types::Formula {
+fn build_formula_string_double_quote<N>(pair: pest::iterators::Pair<Rule>) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let string = pair.into_inner().as_str().parse::<String>().unwrap();
     let value = types::Value::Text(string.replace("\"\"", "\""));
     types::Formula::Value(value)
 }
 
-fn build_formula_string_single_quote(pair: pest::iterators::Pair<Rule>) -> types::Formula {
+fn build_formula_string_single_quote<N>(pair: pest::iterators::Pair<Rule>) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let string = pair.into_inner().as_str().parse::<String>().unwrap();
     let value = types::Value::Text(string);
     types::Formula::Value(value)
 }
 
-fn build_formula_boolean(boolean_value: bool) -> types::Formula {
+fn build_formula_boolean<N>(boolean_value: bool) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     if boolean_value {
         types::Formula::Value(types::Value::Boolean(types::Boolean::True))
     } else {
@@ -76,11 +103,15 @@ fn build_formula_boolean(boolean_value: bool) -> types::Formula {
     }
 }
 
-fn build_formula_unary_operator(
+fn build_formula_unary_operator<N>(
     unary_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let op_type = match unary_operation {
         Rule::abs => types::Operator::Function(types::Function::Abs),
         Rule::not => types::Operator::Function(types::Function::Not),
@@ -94,15 +125,23 @@ fn build_formula_unary_operator(
     types::Formula::Operation(operation)
 }
 
-fn build_formula_reference(pair: pest::iterators::Pair<Rule>) -> types::Formula {
+fn build_formula_reference<N>(pair: pest::iterators::Pair<Rule>) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let string = pair.as_str().parse::<String>().unwrap();
     types::Formula::Reference(string)
 }
 
-fn build_formula_iterator(
+fn build_formula_iterator<N>(
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let mut vec = Vec::new();
     for term in pair.into_inner() {
         vec.push(build_formula_with_parser(term.into_inner(), f));
@@ -110,11 +149,15 @@ fn build_formula_iterator(
     types::Formula::Iterator(vec)
 }
 
-fn build_formula_collective_operator(
+fn build_formula_collective_operator<N>(
     collective_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let mut vec = Vec::new();
     for term in pair.into_inner() {
         if (term.as_str().parse::<String>().unwrap() == "")
@@ -152,11 +195,15 @@ fn rule_to_function_operator(collective_operation: Rule) -> types::Operator {
     }
 }
 
-fn build_formula_collective_operator_average(
+fn build_formula_collective_operator_average<N>(
     collective_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let mut vec = Vec::new();
     for term in pair.into_inner() {
         if (term.as_str().parse::<String>().unwrap() == "")
@@ -164,7 +211,7 @@ fn build_formula_collective_operator_average(
             | (term.as_str().parse::<String>().unwrap() == ", ")
             | (term.as_str().parse::<String>().unwrap() == " ,")
         {
-            vec.push(types::Formula::Value(types::Value::Number(0.0)))
+            vec.push(types::Formula::Value(types::Value::Number(N::zero())))
         } else {
             vec.push(build_formula_with_parser(term.into_inner(), f))
         }
@@ -177,11 +224,15 @@ fn build_formula_collective_operator_average(
     types::Formula::Operation(operation)
 }
 
-fn build_formula_collective_operator_and(
+fn build_formula_collective_operator_and<N>(
     collective_operation: Rule,
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let mut vec = Vec::new();
     for term in pair.into_inner() {
         if (term.as_str().parse::<String>().unwrap() == "")
@@ -204,10 +255,14 @@ fn build_formula_collective_operator_and(
     types::Formula::Operation(operation)
 }
 
-fn build_formula_iff(
+fn build_formula_iff<N>(
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let mut vec = Vec::new();
     for term in pair.into_inner() {
         if (term.as_str().parse::<String>().unwrap() == "")
@@ -227,15 +282,19 @@ fn build_formula_iff(
     types::Formula::Operation(operation)
 }
 
-fn build_formula_custom_function(
+fn build_formula_custom_function<N>(
     pair: pest::iterators::Pair<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let mut vec = Vec::new();
     for field in pair.clone().into_inner() {
         if field.as_rule() == Rule::expr {
             let x = field.into_inner().as_str();
-            let y = x.parse::<XlNum>();
+            let y = x.parse::<N>();
             if let Ok(y) = y {
                 vec.push(y);
             }
@@ -265,11 +324,15 @@ fn build_formula_custom_function(
     }
 }
 
-fn build_formula_binary_operator(
+fn build_formula_binary_operator<N>(
     binary_operator: Rule,
-    lhs: types::Formula,
-    rhs: types::Formula,
-) -> types::Formula {
+    lhs: types::Formula<N>,
+    rhs: types::Formula<N>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let op_type = match binary_operator {
         Rule::add => types::Operator::Plus,
         Rule::subtract => types::Operator::Minus,
@@ -292,10 +355,14 @@ fn build_formula_binary_operator(
     types::Formula::Operation(operation)
 }
 
-fn build_formula_with_parser(
+fn build_formula_with_parser<N>(
     expression: pest::iterators::Pairs<Rule>,
-    f: Option<&impl Fn(String, Vec<XlNum>) -> types::Value>,
-) -> types::Formula {
+    f: Option<&impl Fn(String, Vec<N>) -> types::Value<N>>,
+) -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
     let pratt = PrattParser::new()
         .op(Op::infix(Rule::concat, Assoc::Left))
         .op(Op::infix(Rule::equal, Assoc::Left) | Op::infix(Rule::not_equal, Assoc::Left))
@@ -334,24 +401,26 @@ fn build_formula_with_parser(
             _ => unreachable!(),
         })
         .map_infix(
-            |lhs: types::Formula, op: pest::iterators::Pair<Rule>, rhs: types::Formula| match op
-                .as_rule()
-            {
-                Rule::add => build_formula_binary_operator(Rule::add, lhs, rhs),
-                Rule::subtract => build_formula_binary_operator(Rule::subtract, lhs, rhs),
-                Rule::multiply => build_formula_binary_operator(Rule::multiply, lhs, rhs),
-                Rule::divide => build_formula_binary_operator(Rule::divide, lhs, rhs),
-                Rule::power => build_formula_binary_operator(Rule::power, lhs, rhs),
-                Rule::concat => build_formula_binary_operator(Rule::concat, lhs, rhs),
-                Rule::equal => build_formula_binary_operator(Rule::equal, lhs, rhs),
-                Rule::not_equal => build_formula_binary_operator(Rule::not_equal, lhs, rhs),
-                Rule::greater => build_formula_binary_operator(Rule::greater, lhs, rhs),
-                Rule::less => build_formula_binary_operator(Rule::less, lhs, rhs),
-                Rule::greater_or_equal => {
-                    build_formula_binary_operator(Rule::greater_or_equal, lhs, rhs)
+            |lhs: types::Formula<N>, op: pest::iterators::Pair<Rule>, rhs: types::Formula<N>| {
+                match op.as_rule() {
+                    Rule::add => build_formula_binary_operator(Rule::add, lhs, rhs),
+                    Rule::subtract => build_formula_binary_operator(Rule::subtract, lhs, rhs),
+                    Rule::multiply => build_formula_binary_operator(Rule::multiply, lhs, rhs),
+                    Rule::divide => build_formula_binary_operator(Rule::divide, lhs, rhs),
+                    Rule::power => build_formula_binary_operator(Rule::power, lhs, rhs),
+                    Rule::concat => build_formula_binary_operator(Rule::concat, lhs, rhs),
+                    Rule::equal => build_formula_binary_operator(Rule::equal, lhs, rhs),
+                    Rule::not_equal => build_formula_binary_operator(Rule::not_equal, lhs, rhs),
+                    Rule::greater => build_formula_binary_operator(Rule::greater, lhs, rhs),
+                    Rule::less => build_formula_binary_operator(Rule::less, lhs, rhs),
+                    Rule::greater_or_equal => {
+                        build_formula_binary_operator(Rule::greater_or_equal, lhs, rhs)
+                    }
+                    Rule::less_or_equal => {
+                        build_formula_binary_operator(Rule::less_or_equal, lhs, rhs)
+                    }
+                    _ => unreachable!(),
                 }
-                Rule::less_or_equal => build_formula_binary_operator(Rule::less_or_equal, lhs, rhs),
-                _ => unreachable!(),
             },
         )
         .parse(expression)

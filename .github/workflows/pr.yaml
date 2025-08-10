@@ -9,10 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        features:
-          - default
-          - f32
-          - f64
         phase:
           - debug
           - release
@@ -29,11 +25,6 @@ jobs:
         id: cargo_flags
         run: |
           flags=""
-
-          if [ "${{ matrix.features}}" != "default" ]
-          then
-            flags="${flags} --no-default-features --features=${{ matrix.features }}"
-          fi
 
           if [ "${{ matrix.phase }}" = "release" ]
           then
