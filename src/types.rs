@@ -1,4 +1,9 @@
 use chrono::{DateTime, FixedOffset};
+use num_traits::{AsPrimitive, Float, FromPrimitive};
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
 /// Defines Excel Functions.
 #[derive(Debug, Copy, Clone)]
 pub enum Function {
@@ -54,15 +59,28 @@ pub enum Boolean {
     False,
 }
 
-#[cfg(feature = "f32")]
-pub type XlNum = f32;
-#[cfg(feature = "f64")]
-pub type XlNum = f64;
+pub trait XlNum:
+    Float
+    + AsPrimitive<i64>
+    + AsPrimitive<i32>
+    + AsPrimitive<usize>
+    + FromPrimitive
+    + FromStr
+    + Debug
+    + Display
+{
+}
+
+impl XlNum for f32 {}
+impl XlNum for f64 {}
 
 /// The result of an evaluation.
 #[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    Number(XlNum),
+pub enum Value<N>
+where
+    N: XlNum,
+{
+    Number(N),
     Text(String),
     Boolean(Boolean),
     Iterator(Vec<Self>),
@@ -73,16 +91,22 @@ pub enum Value {
 
 /// Defines each term in Expression Struct.
 #[derive(Debug, Clone)]
-pub enum Formula {
-    Operation(Expression),
-    Value(Value),
+pub enum Formula<N>
+where
+    N: XlNum,
+{
+    Operation(Expression<N>),
+    Value(Value<N>),
     Reference(String),
     Iterator(Vec<Self>),
 }
 
 /// Struct that holds a parsed string. Formula enum and Expression Struct are defined recursively.
 #[derive(Debug, Clone)]
-pub struct Expression {
+pub struct Expression<N>
+where
+    N: XlNum,
+{
     pub op: Operator,
-    pub values: Vec<Formula>,
+    pub values: Vec<Formula<N>>,
 }
