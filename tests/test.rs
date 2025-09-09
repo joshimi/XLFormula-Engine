@@ -1,4 +1,4 @@
-use chrono::{DateTime, Duration, FixedOffset};
+use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::{fmt::Debug, str::FromStr};
 use xlformula_engine::{
     calculate, parse_formula,
@@ -840,6 +840,42 @@ fn it_evaluate_date() {
         Some(&data_function),
         (end_date() - Duration::days(3)).to_string()
     );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=year(end)",
+        Some(&data_function),
+        end_date().year().to_string()
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=month(end)",
+        Some(&data_function),
+        end_date().month().to_string()
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=day(end)",
+        Some(&data_function),
+        end_date().day().to_string()
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=year(end, 2)",
+        Some(&data_function),
+        "#REF!"
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=month(end, 2)",
+        Some(&data_function),
+        "#REF!"
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=day(end, 2)",
+        Some(&data_function),
+        "#REF!"
+    );
 }
 
 #[test]
@@ -1134,6 +1170,24 @@ fn it_evaluates_blanks_in_days_function() {
         "=DAYS(B, start)",
         Some(&data_function),
         -43495.0
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=year(B)",
+        Some(&data_function),
+        "#VALUE!"
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=month(B)",
+        Some(&data_function),
+        "#VALUE!"
+    );
+    test_all_types_with_data!(
+        evaluate_formula_date_with_reference,
+        "=day(B)",
+        Some(&data_function),
+        "#VALUE!"
     );
 }
 

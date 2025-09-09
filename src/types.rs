@@ -21,6 +21,9 @@ pub enum Function {
     Left,
     Iff,
     IsBlank,
+    Year,
+    Month,
+    Day,
 }
 
 /// Defines Excel Operators.
