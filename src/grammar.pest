@@ -36,13 +36,16 @@ logical_operator = _{ equal | not_equal | greater_or_equal | greater
     greater_or_equal= { ">=" }
     less_or_equal   = { "<=" }
 
-function = _{ abs | sum | product | average | negate | days | right | left | iff | isblank | custom_function  }
+function = _{ abs | sum | product | average | negate | days | year | month | day | right | left | iff | isblank | custom_function  }
     abs     = { ^"ABS" ~ "(" ~ expr ~ ")" }
     sum     = { ^"SUM" ~ function_param_with_atomic_expr}
     product = { ^"PRODUCT" ~ function_param_with_atomic_expr}
     average = { ^"AVERAGE" ~ function_param_with_atomic_expr}
     negate  = { ^"-" ~ (function_param | iterator | reference) }
     days    = { ^"DAYS" ~ function_param }
+    year    = { ^"YEAR" ~ "(" ~ expr ~ ")" }
+    month   = { ^"MONTH" ~ "(" ~ expr ~ ")" }
+    day     = { ^"DAY" ~ "(" ~ expr ~ ")" }
     right   = { ^"RIGHT" ~ function_param }
     left    = { ^"LEFT" ~ function_param }
     iff     = { ^"IF" ~ three_params }

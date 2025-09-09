@@ -191,6 +191,9 @@ fn rule_to_function_operator(collective_operation: Rule) -> types::Operator {
         Rule::left => types::Operator::Function(types::Function::Left),
         Rule::iff => types::Operator::Function(types::Function::Iff),
         Rule::isblank => types::Operator::Function(types::Function::IsBlank),
+        Rule::year => types::Operator::Function(types::Function::Year),
+        Rule::month => types::Operator::Function(types::Function::Month),
+        Rule::day => types::Operator::Function(types::Function::Day),
         _ => unreachable!(),
     }
 }
@@ -393,6 +396,9 @@ where
             Rule::negate => build_formula_unary_operator(Rule::negate, pair, f),
             Rule::expr => build_formula_with_parser(pair.into_inner(), f),
             Rule::days => build_formula_collective_operator(Rule::days, pair, f),
+            Rule::year => build_formula_collective_operator(Rule::year, pair, f),
+            Rule::month => build_formula_collective_operator(Rule::month, pair, f),
+            Rule::day => build_formula_collective_operator(Rule::day, pair, f),
             Rule::right => build_formula_collective_operator(Rule::right, pair, f),
             Rule::left => build_formula_collective_operator(Rule::left, pair, f),
             Rule::custom_function => build_formula_custom_function(pair, f),
