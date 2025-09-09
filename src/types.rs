@@ -42,21 +42,47 @@ pub enum Operator {
 }
 
 /// Defines error types.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
 pub enum Error {
+    #[strum(to_string = "#DIV/0!")]
     Div0,
+    #[strum(to_string = "#CAST!")]
     Cast,
+    #[strum(to_string = "#PARSE!")]
     Parse,
+    #[strum(to_string = "#VALUE!")]
     Value,
+    #[strum(to_string = "#ARG!")]
     Argument,
+    #[strum(to_string = "#REF!")]
     Reference,
 }
 
 /// Defines boolean types.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, strum::Display)]
+#[strum(serialize_all = "UPPERCASE")]
 pub enum Boolean {
     True,
     False,
+}
+
+impl From<bool> for Boolean {
+    fn from(value: bool) -> Self {
+        if value {
+            Boolean::True
+        } else {
+            Boolean::False
+        }
+    }
+}
+
+impl From<Boolean> for bool {
+    fn from(value: Boolean) -> Self {
+        match value {
+            Boolean::True => true,
+            Boolean::False => false,
+        }
+    }
 }
 
 pub trait XlNum:
