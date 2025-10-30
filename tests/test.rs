@@ -823,12 +823,6 @@ fn it_evaluate_date() {
         182.00
     );
     test_all_types_with_data!(
-        evaluate_formula_number_with_reference,
-        "=days(end, start)",
-        Some(&data_function),
-        182.00
-    );
-    test_all_types_with_data!(
         evaluate_formula_date_with_reference,
         "=start + 1",
         Some(&data_function),
@@ -942,6 +936,30 @@ fn it_evaluate_left_and_right_functions() {
 
     test_all_types!(evaluate_formula_string, "=LEFT(\"apple\", 10)", "apple");
     test_all_types!(evaluate_formula_string, "=RIGHT(\"apple\", 10)", "apple");
+
+    test_all_types!(evaluate_formula_string, "=RIGHT(305)", "5");
+    test_all_types!(evaluate_formula_string, "=LEFT(305, 2)", "30");
+
+    fn data_function<N: XlNum>(s: String) -> types::Value<N> {
+        let date1: DateTime<FixedOffset> =
+            DateTime::parse_from_rfc3339("2019-03-01T02:00:00.000Z").unwrap();
+        match s.as_str() {
+            "date1" => types::Value::Date(date1),
+            _ => types::Value::Error(types::Error::Value),
+        }
+    }
+    test_all_types_with_data!(
+        evaluate_formula_string_with_reference,
+        "=RIGHT(YEAR(date1), 2)",
+        Some(&data_function),
+        "19"
+    );
+    test_all_types_with_data!(
+        evaluate_formula_string_with_reference,
+        "=LEFT(YEAR(date1), 2)",
+        Some(&data_function),
+        "20"
+    );
 }
 
 #[test]

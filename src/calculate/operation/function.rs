@@ -32,6 +32,12 @@ where
             let start = if trim_length > len { len } else { trim_length };
             &temp[(len - start)..]
         }
+        types::Value::Number(s) => {
+            let temp: &'static str = Box::leak(s.to_string().into_boxed_str());
+            let len = temp.len();
+            let start = if trim_length > len { len } else { trim_length };
+            &temp[(len - start)..]
+        }
         _ => "",
     };
     types::Value::Text(trimmed_string.to_string())
@@ -50,6 +56,12 @@ where
     let trimmed_string = match string {
         types::Value::Text(s) => {
             let temp: &'static str = Box::leak(s.into_boxed_str());
+            let len = temp.len();
+            let end = if trim_length > len { len } else { trim_length };
+            &temp[..end]
+        }
+        types::Value::Number(s) => {
+            let temp: &'static str = Box::leak(s.to_string().into_boxed_str());
             let len = temp.len();
             let end = if trim_length > len { len } else { trim_length };
             &temp[..end]
