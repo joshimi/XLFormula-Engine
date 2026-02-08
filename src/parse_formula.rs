@@ -194,6 +194,9 @@ fn rule_to_function_operator(collective_operation: Rule) -> types::Operator {
         Rule::year => types::Operator::Function(types::Function::Year),
         Rule::month => types::Operator::Function(types::Function::Month),
         Rule::day => types::Operator::Function(types::Function::Day),
+        Rule::find => types::Operator::Function(types::Function::Find),
+        Rule::search => types::Operator::Function(types::Function::Search),
+        Rule::iserror => types::Operator::Function(types::Function::IsError),
         _ => unreachable!(),
     }
 }
@@ -404,6 +407,9 @@ where
             Rule::custom_function => build_formula_custom_function(pair, f),
             Rule::iff => build_formula_iff(pair, f),
             Rule::isblank => build_formula_collective_operator(Rule::isblank, pair, f),
+            Rule::find => build_formula_collective_operator(Rule::find, pair, f),
+            Rule::search => build_formula_collective_operator(Rule::search, pair, f),
+            Rule::iserror => build_formula_collective_operator(Rule::iserror, pair, f),
             _ => unreachable!(),
         })
         .map_infix(

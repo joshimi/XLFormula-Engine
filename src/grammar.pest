@@ -36,7 +36,7 @@ logical_operator = _{ equal | not_equal | greater_or_equal | greater
     greater_or_equal= { ">=" }
     less_or_equal   = { "<=" }
 
-function = _{ abs | sum | product | average | negate | days | year | month | day | right | left | iff | isblank | custom_function  }
+function = _{ abs | sum | product | average | negate | days | year | month | day | right | left | iff | isblank | find | search | iserror | custom_function  }
     abs     = { ^"ABS" ~ "(" ~ expr ~ ")" }
     sum     = { ^"SUM" ~ function_param_with_atomic_expr}
     product = { ^"PRODUCT" ~ function_param_with_atomic_expr}
@@ -50,6 +50,9 @@ function = _{ abs | sum | product | average | negate | days | year | month | day
     left    = { ^"LEFT" ~ function_param }
     iff     = { ^"IF" ~ three_params }
     isblank = { ^"ISBLANK" ~ function_param}
+    find   = { ^"FIND" ~ function_param }
+    search = { ^"SEARCH" ~ function_param }
+    iserror = { ^"ISERROR" ~ function_param }
     custom_function = { reference ~ (function_param | empty_param) } 
 
 logical_function = _{ or | and | xor | not } 

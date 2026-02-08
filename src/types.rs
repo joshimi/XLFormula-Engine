@@ -24,6 +24,9 @@ pub enum Function {
     Year,
     Month,
     Day,
+    Find,
+    Search,
+    IsError,
 }
 
 /// Defines Excel Operators.
