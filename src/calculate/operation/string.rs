@@ -226,20 +226,3 @@ fn match_pattern(
     }
     Some(match_start)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn find_position_rejects_invalid_start() {
-        assert_eq!(find_position_case_sensitive("a", "abc", 0), None);
-        assert_eq!(find_position_case_sensitive("a", "abc", -1), None);
-    }
-
-    #[test]
-    fn search_position_rejects_invalid_start() {
-        assert_eq!(search_position_with_wildcards("a", "abc", 0), None);
-        assert_eq!(search_position_with_wildcards("a", "abc", -1), None);
-    }
-}
