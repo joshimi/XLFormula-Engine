@@ -1,5 +1,4 @@
-use std::fmt::Debug;
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 use xlformula_engine::{
     calculate,
     parse_formula,

@@ -1,7 +1,6 @@
 mod common;
 
-use std::fmt::Debug;
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 use xlformula_engine::types::XlNum;
 
 fn eval<N>(s: &str) -> String

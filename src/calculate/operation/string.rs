@@ -1,4 +1,4 @@
-use crate::types::{self, Boolean, XlNum};
+use crate::types::{self, XlNum};
 use std::{fmt::Debug, str::FromStr};
 
 pub fn calculate_concat_operator(str1: &str, str2: &str) -> String {
@@ -57,24 +57,32 @@ where
     types::Value::Boolean(f(string1, string2).into())
 }
 
+/// Result of coercing a formula value to string for FIND/SEARCH (Excel semantics).
+#[derive(Debug, Clone)]
+pub enum CoerceForFind<N>
+where
+    N: XlNum,
+{
+    /// Value was coerced to string; use for FIND/SEARCH.
+    Coerced(String),
+    /// Propagate this value as the formula result (e.g. existing error or #VALUE! for Date/Iterator).
+    Propagate(types::Value<N>),
+}
+
 /// Coerce a formula value to string for FIND/SEARCH (Excel semantics).
-/// Returns Ok(s) or Err(Value::Error) for Date/Iterator.
-pub fn value_to_string_for_find<N>(v: &types::Value<N>) -> Result<String, types::Value<N>>
+pub fn value_to_string_for_find<N>(v: &types::Value<N>) -> CoerceForFind<N>
 where
     N: XlNum,
     <N as FromStr>::Err: Debug,
 {
     match v {
-        types::Value::Error(e) => Err(types::Value::Error(*e)),
-        types::Value::Number(n) => Ok(n.to_string()),
-        types::Value::Text(s) => Ok(s.clone()),
-        types::Value::Boolean(b) => Ok(match b {
-            Boolean::True => "TRUE".to_string(),
-            Boolean::False => "FALSE".to_string(),
-        }),
-        types::Value::Blank => Ok(String::new()),
+        types::Value::Error(e) => CoerceForFind::Propagate(types::Value::Error(*e)),
+        types::Value::Number(n) => CoerceForFind::Coerced(n.to_string()),
+        types::Value::Text(s) => CoerceForFind::Coerced(s.clone()),
+        types::Value::Boolean(b) => CoerceForFind::Coerced(b.to_string()),
+        types::Value::Blank => CoerceForFind::Coerced(String::new()),
         types::Value::Date(_) | types::Value::Iterator(_) => {
-            Err(types::Value::Error(types::Error::Value))
+            CoerceForFind::Propagate(types::Value::Error(types::Error::Value))
         }
     }
 }
@@ -85,9 +93,13 @@ pub fn find_position_case_sensitive(
     within_text: &str,
     start_num_1based: i64,
 ) -> Option<i64> {
+    if start_num_1based < 1 {
+        return None;
+    }
     let start = (start_num_1based - 1) as usize;
+    // Character count (not byte len) for Excel 1-based character position semantics and UTF-8.
     let char_count = within_text.chars().count();
-    if start_num_1based < 1 || start >= char_count {
+    if start >= char_count {
         return None;
     }
     if find_text.is_empty() {
@@ -106,9 +118,13 @@ pub fn search_position_with_wildcards(
     within_text: &str,
     start_num_1based: i64,
 ) -> Option<i64> {
+    if start_num_1based < 1 {
+        return None;
+    }
     let start = (start_num_1based - 1) as usize;
+    // Character count (not byte len) for Excel 1-based character position semantics and UTF-8.
     let char_count = within_text.chars().count();
-    if start_num_1based < 1 || start >= char_count {
+    if start >= char_count {
         return None;
     }
     if find_text.is_empty() {
@@ -209,4 +225,21 @@ fn match_pattern(
         }
     }
     Some(match_start)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn find_position_rejects_invalid_start() {
+        assert_eq!(find_position_case_sensitive("a", "abc", 0), None);
+        assert_eq!(find_position_case_sensitive("a", "abc", -1), None);
+    }
+
+    #[test]
+    fn search_position_rejects_invalid_start() {
+        assert_eq!(search_position_with_wildcards("a", "abc", 0), None);
+        assert_eq!(search_position_with_wildcards("a", "abc", -1), None);
+    }
 }

@@ -1,7 +1,6 @@
 mod common;
 
-use std::fmt::Debug;
-use std::str::FromStr;
+use std::{fmt::Debug, str::FromStr};
 use xlformula_engine::types::XlNum;
 
 fn eval<N>(s: &str) -> String
@@ -53,6 +52,7 @@ fn search_not_found() {
 #[test]
 fn search_start_num_bounds() {
     assert_eq!(eval::<f64>(r#"=SEARCH("a","abc",0)"#), "#VALUE!");
+    assert_eq!(eval::<f64>(r#"=SEARCH("a","abc",-1)"#), "#VALUE!");
     assert_eq!(eval::<f64>(r#"=SEARCH("a","abc",4)"#), "#VALUE!");
 }
 

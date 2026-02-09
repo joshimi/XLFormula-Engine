@@ -7,6 +7,7 @@ use super::{
     },
     string::{
         find_position_case_sensitive, search_position_with_wildcards, value_to_string_for_find,
+        CoerceForFind,
     },
 };
 use crate::{
@@ -165,12 +166,12 @@ where
         return types::Value::Error(e);
     }
     let find_s = match value_to_string_for_find(&find_text) {
-        Ok(s) => s,
-        Err(v) => return v,
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
     };
     let within_s = match value_to_string_for_find(&within_text) {
-        Ok(s) => s,
-        Err(v) => return v,
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
     };
     let start_i64: i64 = match &start_num {
         types::Value::Number(n) => n.as_(),
@@ -212,12 +213,12 @@ where
         return types::Value::Error(e);
     }
     let find_s = match value_to_string_for_find(&find_text) {
-        Ok(s) => s,
-        Err(v) => return v,
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
     };
     let within_s = match value_to_string_for_find(&within_text) {
-        Ok(s) => s,
-        Err(v) => return v,
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
     };
     let start_i64: i64 = match &start_num {
         types::Value::Number(n) => n.as_(),
