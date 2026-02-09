@@ -93,10 +93,7 @@ pub fn find_position_case_sensitive(
     within_text: &str,
     start_num_1based: i64,
 ) -> Option<i64> {
-    if start_num_1based < 1 {
-        return None;
-    }
-    let start = (start_num_1based - 1) as usize;
+    let start: usize = (start_num_1based - 1).try_into().ok()?;
     // Character count (not byte len) for Excel 1-based character position semantics and UTF-8.
     let char_count = within_text.chars().count();
     if start >= char_count {
@@ -118,10 +115,7 @@ pub fn search_position_with_wildcards(
     within_text: &str,
     start_num_1based: i64,
 ) -> Option<i64> {
-    if start_num_1based < 1 {
-        return None;
-    }
-    let start = (start_num_1based - 1) as usize;
+    let start: usize = (start_num_1based - 1).try_into().ok()?;
     // Character count (not byte len) for Excel 1-based character position semantics and UTF-8.
     let char_count = within_text.chars().count();
     if start >= char_count {
