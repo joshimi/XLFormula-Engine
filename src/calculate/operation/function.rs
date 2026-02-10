@@ -15,7 +15,7 @@ use crate::{
         get_binary_function_args, get_find_args, get_number_and_string_values,
         get_ternary_function_args, get_unary_function_arg,
     },
-    types::{self, Boolean, Error, XlNum},
+    types::{self, Error, XlNum},
 };
 use std::{fmt::Debug, str::FromStr};
 
@@ -146,11 +146,7 @@ where
 }
 
 fn calculate_find<N>(
-    (find_text, within_text, start_num): (
-        types::Value<N>,
-        types::Value<N>,
-        types::Value<N>,
-    ),
+    (find_text, within_text, start_num): (types::Value<N>, types::Value<N>, types::Value<N>),
 ) -> types::Value<N>
 where
     N: XlNum,
@@ -185,19 +181,16 @@ where
         return types::Value::Error(Error::Value);
     }
     match find_position_case_sensitive(&find_s, &within_s, start_i64) {
-        Some(pos) => types::Value::Number(
-            N::from_i64(pos).unwrap_or_else(|| N::from_f64(1.0).unwrap()),
-        ),
+        Some(pos) => N::from_i64(pos)
+            .or_else(|| N::from_f64(1.0))
+            .map(types::Value::Number)
+            .unwrap_or_else(|| types::Value::Error(Error::Value)),
         None => types::Value::Error(Error::Value),
     }
 }
 
 fn calculate_search<N>(
-    (find_text, within_text, start_num): (
-        types::Value<N>,
-        types::Value<N>,
-        types::Value<N>,
-    ),
+    (find_text, within_text, start_num): (types::Value<N>, types::Value<N>, types::Value<N>),
 ) -> types::Value<N>
 where
     N: XlNum,
@@ -232,9 +225,10 @@ where
         return types::Value::Error(Error::Value);
     }
     match search_position_with_wildcards(&find_s, &within_s, start_i64) {
-        Some(pos) => types::Value::Number(
-            N::from_i64(pos).unwrap_or_else(|| N::from_f64(1.0).unwrap()),
-        ),
+        Some(pos) => N::from_i64(pos)
+            .or_else(|| N::from_f64(1.0))
+            .map(types::Value::Number)
+            .unwrap_or_else(|| types::Value::Error(Error::Value)),
         None => types::Value::Error(Error::Value),
     }
 }
@@ -243,10 +237,5 @@ fn calculate_iserror<N>(arg: types::Value<N>) -> types::Value<N>
 where
     N: XlNum,
 {
-    let is_err = matches!(arg, types::Value::Error(_));
-    types::Value::Boolean(if is_err {
-        Boolean::True
-    } else {
-        Boolean::False
-    })
+    types::Value::Boolean(matches!(arg, types::Value::Error(_)).into())
 }

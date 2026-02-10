@@ -93,7 +93,7 @@ pub fn find_position_case_sensitive(
     within_text: &str,
     start_num_1based: i64,
 ) -> Option<i64> {
-    let start: usize = (start_num_1based - 1).try_into().ok()?;
+    let start: usize = start_num_1based.checked_sub(1)?.try_into().ok()?;
     // Character count (not byte len) for Excel 1-based character position semantics and UTF-8.
     let char_count = within_text.chars().count();
     if start >= char_count {
@@ -115,7 +115,7 @@ pub fn search_position_with_wildcards(
     within_text: &str,
     start_num_1based: i64,
 ) -> Option<i64> {
-    let start: usize = (start_num_1based - 1).try_into().ok()?;
+    let start: usize = start_num_1based.checked_sub(1)?.try_into().ok()?;
     // Character count (not byte len) for Excel 1-based character position semantics and UTF-8.
     let char_count = within_text.chars().count();
     if start >= char_count {
@@ -192,12 +192,12 @@ fn match_pattern(
                 t += 1;
             }
             '*' => {
-                let rest_pat_lower: Vec<char> = pattern_lower[p + 1..].to_vec();
-                let rest_pat_orig: Vec<char> = pattern_orig[p + 1..].to_vec();
-                for skip in 0..=(text_lower.len() - t) {
+                let rest_pat_lower = &pattern_lower[p + 1..];
+                let rest_pat_orig = &pattern_orig[p + 1..];
+                for skip in 0..=text_lower.len().saturating_sub(t) {
                     if let Some(off) = match_pattern(
-                        &rest_pat_lower,
-                        &rest_pat_orig,
+                        rest_pat_lower,
+                        rest_pat_orig,
                         text_lower,
                         text_orig,
                         t + skip,
