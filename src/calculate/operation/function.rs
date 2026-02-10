@@ -5,13 +5,17 @@ use super::{
         calculate_abs, calculate_average, calculate_collective_operator,
         calculate_collective_product_operator,
     },
+    string::{
+        find_position_case_sensitive, search_position_with_wildcards, value_to_string_for_find,
+        CoerceForFind,
+    },
 };
 use crate::{
     calculate::args::{
-        get_binary_function_args, get_number_and_string_values, get_ternary_function_args,
-        get_unary_function_arg,
+        get_binary_function_args, get_find_args, get_number_and_string_values,
+        get_ternary_function_args, get_unary_function_arg,
     },
-    types::{self, XlNum},
+    types::{self, Error, XlNum},
 };
 use std::{fmt::Debug, str::FromStr};
 
@@ -135,5 +139,103 @@ where
         types::Function::Year => calculate_year(get_unary_function_arg(exp, f)),
         types::Function::Month => calculate_month(get_unary_function_arg(exp, f)),
         types::Function::Day => calculate_day(get_unary_function_arg(exp, f)),
+        types::Function::Find => calculate_find(get_find_args(exp, f)),
+        types::Function::Search => calculate_search(get_find_args(exp, f)),
+        types::Function::IsError => calculate_iserror(get_unary_function_arg(exp, f)),
     }
+}
+
+fn calculate_find<N>(
+    (find_text, within_text, start_num): (types::Value<N>, types::Value<N>, types::Value<N>),
+) -> types::Value<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
+    if let types::Value::Error(e) = find_text {
+        return types::Value::Error(e);
+    }
+    if let types::Value::Error(e) = within_text {
+        return types::Value::Error(e);
+    }
+    if let types::Value::Error(e) = start_num {
+        return types::Value::Error(e);
+    }
+    let find_s = match value_to_string_for_find(&find_text) {
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
+    };
+    let within_s = match value_to_string_for_find(&within_text) {
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
+    };
+    let start_i64: i64 = match &start_num {
+        types::Value::Number(n) => n.as_(),
+        _ => return types::Value::Error(Error::Value),
+    };
+    if start_i64 <= 0 {
+        return types::Value::Error(Error::Value);
+    }
+    let within_len = within_s.chars().count() as i64;
+    if start_i64 > within_len {
+        return types::Value::Error(Error::Value);
+    }
+    match find_position_case_sensitive(&find_s, &within_s, start_i64) {
+        Some(pos) => N::from_i64(pos)
+            .or_else(|| N::from_f64(1.0))
+            .map(types::Value::Number)
+            .unwrap_or_else(|| types::Value::Error(Error::Value)),
+        None => types::Value::Error(Error::Value),
+    }
+}
+
+fn calculate_search<N>(
+    (find_text, within_text, start_num): (types::Value<N>, types::Value<N>, types::Value<N>),
+) -> types::Value<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
+    if let types::Value::Error(e) = find_text {
+        return types::Value::Error(e);
+    }
+    if let types::Value::Error(e) = within_text {
+        return types::Value::Error(e);
+    }
+    if let types::Value::Error(e) = start_num {
+        return types::Value::Error(e);
+    }
+    let find_s = match value_to_string_for_find(&find_text) {
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
+    };
+    let within_s = match value_to_string_for_find(&within_text) {
+        CoerceForFind::Coerced(s) => s,
+        CoerceForFind::Propagate(v) => return v,
+    };
+    let start_i64: i64 = match &start_num {
+        types::Value::Number(n) => n.as_(),
+        _ => return types::Value::Error(Error::Value),
+    };
+    if start_i64 <= 0 {
+        return types::Value::Error(Error::Value);
+    }
+    let within_len = within_s.chars().count() as i64;
+    if start_i64 > within_len {
+        return types::Value::Error(Error::Value);
+    }
+    match search_position_with_wildcards(&find_s, &within_s, start_i64) {
+        Some(pos) => N::from_i64(pos)
+            .or_else(|| N::from_f64(1.0))
+            .map(types::Value::Number)
+            .unwrap_or_else(|| types::Value::Error(Error::Value)),
+        None => types::Value::Error(Error::Value),
+    }
+}
+
+fn calculate_iserror<N>(arg: types::Value<N>) -> types::Value<N>
+where
+    N: XlNum,
+{
+    types::Value::Boolean(matches!(arg, types::Value::Error(_)).into())
 }
