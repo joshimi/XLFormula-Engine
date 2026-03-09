@@ -4,6 +4,7 @@ use std::{
     fmt::{Debug, Display},
     str::FromStr,
 };
+
 /// Defines Excel Functions.
 #[derive(Debug, Copy, Clone)]
 pub enum Function {
@@ -27,6 +28,7 @@ pub enum Function {
     Find,
     Search,
     IsError,
+    Blank,
 }
 
 /// Defines Excel Operators.
