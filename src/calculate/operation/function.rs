@@ -142,6 +142,7 @@ where
         types::Function::Find => calculate_find(get_find_args(exp, f)),
         types::Function::Search => calculate_search(get_find_args(exp, f)),
         types::Function::IsError => calculate_iserror(get_unary_function_arg(exp, f)),
+        types::Function::Blank => types::Value::Blank,
     }
 }
 

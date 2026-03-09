@@ -125,6 +125,14 @@ where
     types::Formula::Operation(operation)
 }
 
+fn build_formula_blank_func<N>() -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
+    types::Formula::Value(types::Value::Blank)
+}
+
 fn build_formula_reference<N>(pair: pest::iterators::Pair<Rule>) -> types::Formula<N>
 where
     N: XlNum,
@@ -197,6 +205,7 @@ fn rule_to_function_operator(collective_operation: Rule) -> types::Operator {
         Rule::find => types::Operator::Function(types::Function::Find),
         Rule::search => types::Operator::Function(types::Function::Search),
         Rule::iserror => types::Operator::Function(types::Function::IsError),
+        Rule::blank_func => types::Operator::Function(types::Function::Blank),
         _ => unreachable!(),
     }
 }
@@ -410,6 +419,7 @@ where
             Rule::find => build_formula_collective_operator(Rule::find, pair, f),
             Rule::search => build_formula_collective_operator(Rule::search, pair, f),
             Rule::iserror => build_formula_collective_operator(Rule::iserror, pair, f),
+            Rule::blank_func => build_formula_blank_func(),
             _ => unreachable!(),
         })
         .map_infix(

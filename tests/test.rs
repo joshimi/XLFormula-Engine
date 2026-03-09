@@ -468,6 +468,13 @@ fn it_evaluate_wrong_parens1() {
     test_all_types!(evaluate_formula_string, "=Hello World", "#PARSE!");
 }
 
+//////////////////////////// Blank //////////////////////////////////
+
+#[test]
+fn it_evaluate_blank() {
+    test_all_types!(evaluate_formula_string, "=BLANK()", "0");
+}
+
 //////////////////////////// Boolean //////////////////////////////////
 #[test]
 fn it_evaluate_comparison_operators() {
