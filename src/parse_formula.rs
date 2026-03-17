@@ -1,7 +1,8 @@
 use crate::types::{self, XlNum};
+use chrono::prelude::*;
 use pest::{
-    pratt_parser::{Assoc, Op, PrattParser},
     Parser,
+    pratt_parser::{Assoc, Op, PrattParser},
 };
 use pest_derive::Parser;
 use std::{fmt::Debug, str::FromStr};
@@ -131,6 +132,14 @@ where
     <N as FromStr>::Err: Debug,
 {
     types::Formula::Value(types::Value::Blank)
+}
+
+fn build_now_func<N>() -> types::Formula<N>
+where
+    N: XlNum,
+    <N as FromStr>::Err: Debug,
+{
+    types::Formula::Value(types::Value::Date(Utc::now().into()))
 }
 
 fn build_formula_reference<N>(pair: pest::iterators::Pair<Rule>) -> types::Formula<N>
@@ -420,6 +429,7 @@ where
             Rule::search => build_formula_collective_operator(Rule::search, pair, f),
             Rule::iserror => build_formula_collective_operator(Rule::iserror, pair, f),
             Rule::blank_func => build_formula_blank_func(),
+            Rule::now => build_now_func(),
             _ => unreachable!(),
         })
         .map_infix(

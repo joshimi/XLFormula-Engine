@@ -1,9 +1,8 @@
 use chrono::{DateTime, Datelike, Duration, FixedOffset};
 use std::{fmt::Debug, str::FromStr};
 use xlformula_engine::{
-    calculate, parse_formula,
+    NoCustomFunction, NoReference, calculate, parse_formula,
     types::{self, XlNum},
-    NoCustomFunction, NoReference,
 };
 
 fn evaluate_formula_number<N>(s: &str) -> N
@@ -473,6 +472,14 @@ fn it_evaluate_wrong_parens1() {
 #[test]
 fn it_evaluate_blank() {
     test_all_types!(evaluate_formula_string, "=BLANK()", "0");
+}
+
+//////////////////////////// Now //////////////////////////////////
+#[test]
+fn it_evaluate_now() {
+    let formula = parse_formula::parse_string_to_formula("=NOW()", None::<NoCustomFunction<f64>>);
+    let result = calculate::calculate_formula(formula, None::<NoReference<f64>>);
+    assert!(matches!(result, types::Value::Date(_)));
 }
 
 //////////////////////////// Boolean //////////////////////////////////
